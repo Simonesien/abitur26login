@@ -9,6 +9,8 @@ Um den Backend-Code besser erschließen zu können, sind die beiden Diagramme Fl
 ## Vollständigkeit
 Hier ist nur der Teil des Source Codes, der für den Login zuständig ist, publiziert. Alles andere (hauptsächlich die anschließende Verifizierung der Gültigkeit des erlangten Session-Cookies sowie der Source Code des internen Bereichs auf der Webseite, auf welchen man ohne Authentisierung keinen Zugriff), ist hier nicht veröffentlicht, weil dessen Veröffentlichung den Zweck überschreiten würde, die Eingabe der sensiblen Anmeldedaten durch den Loginprozess zu verfolgen.
 
+## Code testen
+Um den Code auszuführen, ist es nötig, die beiden Bibliotheken "org.json.jar" und "sqlite.jar" einzubinden, die aus Lizenzgründen hier nicht extra veröffentlicht sind. Dann kann man das Backend mit dem Command ``` java -cp ".:org.json.jar:sqlite.jar" HTTPS_Server.java ``` starten. (Auf Windows ; statt : als Separator im Path)
 ## Aktualität
 Die Veröffentlichung ist derzeit auf dem Stand vom 31.8.2025. Es kann natürlich sein, dass nach diesem Datum noch Änderungen an der Webseite, unter anderem also auch an login.html gibt. Zum Beispiel können die Fehler in den Fehlermeldungen spezifischer beschrieben oder das Design der Webseite geändert werden. In diesem Fall werden die Änderungen hier nicht entsprechend aktualisiert. Sollte sich jedoch im wesentlichen Loginprozess etwas ändern, werden die Neuerungen hier veröffentlicht.
 
