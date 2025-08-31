@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="keywords" content="Abitur Jahrgang 2026 Lichtenbergschule LUO Darmstadt">
+      <style>
+         *{padding:0;margin:0;}
+         body{background-color:lightgoldenrodyellow;padding:20px;display:flex;justify-content:center;align-items:center;}
+         #loginContainer{background:white;padding:50px;border-radius:5px;width:500px;height:auto;box-sizing:border-box;}
+         .formGroup{margin-bottom:15px;}
+         label{display:block;margin-bottom:5px;}
+         input{width:100%;padding:8px;box-sizing:border-box;}
+         button{width:100%;padding:10px;background-color:#007bff;color:white;border:none;border-radius:5px;cursor:pointer;}
+         button:hover{background-color:#0056b3;}
+         #message{margin-top:10px;color:red;min-height:auto;}
+         .flexContainer{display:flex;justify-content:center;}
+         #spinner{background-image:url("./spinner.svg");height:5em;width:5em;animation-name:spin;animation-direction:normal;animation-duration:1s;animation-iteration-count:infinite;animation-timing-function:steps(8);}
+         @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(1turn);}}
+      </style>
+      <title>Abitur Jahrgang 2026 der LUO</title>
+   </head>
+   <body>
+      <div id="loginContainer">
+         <h2>Login</h2><br>
+         <form id="loginForm">
+            <div class="formGroup">
+               <label for="username">Loginname:</label>
+               <input type="text" id="username" name="username" placeholder="Passwort" value="" required/>
+            </div>
+            <div class="formGroup">
+               <label for="password">Passwort:</label>
+               <input type="password" id="password" name="password" placeholder="Vorname.Nachname" value="" autocomplete="off" maxlength="120" required/>
+            </div>
+            <button type="submit">Anmelden</button>
+            <div id="message"></div>
+         </form>
+         <div id="loginAnimation" style="display:none;">
+            <div class="flexContainer"><div id="spinner"></div></div><!-- spinner.svg ist ein Werk von FontAwesome - deren Lizenz findet sich hier: https://raw.githubusercontent.com/ProfessionalWiki/FontAwesome/refs/heads/master/res/fontawesome/LICENSE.txt -->
+            <div class="flexContainer"><p>Rede mit dem Server ...</p></div>
+         </div>
+      </div>
+      <script>
+         if (window.location.href.indexOf("loginfailed") != -1){
+            showMessage("Login failed. Possibly it expired - try again.");
+         }
+         else if (window.location.href.indexOf("servererror") != -1){
+            showMessage("The server could not be reached. Try again later.");
+         }
+         else if (getCookie("Username") != "" && getCookie("SessionCookie") != ""){
+            location.href = "intern/index.html";
+         }
+
+         function getCookie(cname){
+            let name = cname + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+               let c = ca[i];
+               while (c.charAt(0) == ' '){
+                  c = c.substring(1);
+               }
+               if (c.indexOf(name) == 0){
+                  return c.substring(name.length, c.length);
+               }
+            }
+            return "";
+         }
+
+         function setCookie(cname, cvalue){
+            let d = new Date();
+            d.setTime(d.getTime() + 5*24*60*60*1000);
+            document.cookie = cname + "=" + cvalue + ";Expires=" + d.toUTCString() + ";Path=/" + "; SameSite=lax" + ";Secure";
+         }
+
+         function showMessage(message){
+            const messageDiv = document.getElementById("message");
+            messageDiv.textContent = message;
+         }
+
+         document.getElementById("loginForm").addEventListener("submit", async function(event){
+            event.preventDefault();
+            let username = document.getElementById("username").value;
+            let password = document.getElementById("password").value;
+            username = username.toLowerCase();
+
+            if (!username || !/^[a-zA-Z0-9\u002d\u00e4\u00f6\u00fc\u00df.]+$/.test(username)){
+               showMessage("Invalid characters in username. Valid characters: a-z, A-Z, 0-9, ä, ö, ü, Ä, Ö, Ü, ß, '-' and '.' ('.' not in the beginning or at the end).");
+               return;
+            }
+
+            document.getElementById("loginForm").style.display = "none";
+            document.getElementById("loginAnimation").style.display = "block";
+
+            try {
+               let response = await fetch('https://abitur26.de:45308/login', {
+                  method: "POST",
+                  body: JSON.stringify({Username: username, Password: password})
+               });
+               let result = await response.json();
+
+               if (result.hasOwnProperty("Error")){
+                  showMessage(result.Error);
+                  document.getElementById("loginForm").style.display = "block";
+                  document.getElementById("loginAnimation").style.display = "none";
+                  return;
+               }
+               else if (result.hasOwnProperty("Authenticated")){
+                  if (result.Authenticated == "False"){
+                     showMessage("Combination of username and password invalid");
+                     document.getElementById("loginForm").style.display = "block";
+                     document.getElementById("loginAnimation").style.display = "none";
+                     return;
+                  }
+                  else if (result.Authenticated == "True" && result.hasOwnProperty("SessionCookie")){
+                     setCookie("Username", username);
+                     setCookie("SessionCookie", result.SessionCookie);
+                     location.href = "intern/index.html";
+                     setTimeout(function(){
+                        document.getElementById("loginForm").style.display = "block";
+                        document.getElementById("loginAnimation").style.display = "none";
+                     }, 1000);
+                  }
+                  else {
+                     showMessage("Server sent an unexpected reponse.");
+                     document.getElementById("loginForm").style.display = "block";
+                     document.getElementById("loginAnimation").style.display = "none";
+                     return;
+                  }
+               }
+               else {
+                  showMessage("Server sent an unexpected reponse.");
+                  document.getElementById("loginForm").style.display = "block";
+                  document.getElementById("loginAnimation").style.display = "none";
+                  return;
+               }
+            }
+            catch (error){
+               showMessage("Data could not be loaded from server.");
+               document.getElementById("loginForm").style.display = "block";
+               document.getElementById("loginAnimation").style.display = "none";
+               console.log(error);
+               return;
+            }
+         });
+      </script>
+   </body>
+</html>
